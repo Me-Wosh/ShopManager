@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ShopManagerBackend.Entities;
+using ShopManagerBackend.Models;
 using ShopManagerBackend.Services;
 
 namespace ShopManagerBackend.Controllers;
@@ -21,9 +22,39 @@ public class ProductsController : ControllerBase
         return Ok(_productsService.GetAllProducts());
     }
 
+    [HttpGet("Available")]
+    public ActionResult<IEnumerable<Product>> GetAvailableProducts()
+    {
+        return Ok(_productsService.GetAvailableProducts());
+    }
+
     [HttpGet("{id}")]
     public ActionResult<Product> GetProductById([FromRoute]int id)
     {
         return Ok(_productsService.GetProductById(id));
+    }
+
+    [HttpPut("Delivery")]
+    public ActionResult Delivery([FromBody]List<Product> products)
+    {
+        _productsService.Delivery(products);
+        
+        return Ok("Successful delivery");
+    }
+
+    [HttpPatch("Edit")]
+    public ActionResult EditProduct([FromBody]EditProductDto product)
+    {
+        _productsService.EditProduct(product);
+
+        return Ok("Product updated");
+    }
+
+    [HttpDelete("Delete/{id}")]
+    public ActionResult DeleteProduct([FromRoute] int id)
+    {
+        _productsService.DeleteProduct(id);
+
+        return Ok("Product deleted");
     }
 }
