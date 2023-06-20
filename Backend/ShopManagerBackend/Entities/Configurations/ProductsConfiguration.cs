@@ -14,12 +14,18 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired();
 
         builder
+            .Property(p => p.Sku)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder
             .Property(p => p.Name)
             .IsRequired()
             .HasMaxLength(50);
 
         builder
             .Property(p => p.Quantity)
+            .IsRequired()
             .HasDefaultValue(0);
 
         builder
@@ -33,6 +39,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 1,
+                    Sku = "HX421RO",
                     Name = "Hat",
                     Quantity = 40,
                     Price = 16.90m,
@@ -42,6 +49,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 2,
+                    Sku = "MN632FD",
                     Name = "Hoodie",
                     Quantity = 80,
                     Price = 35.90m,
@@ -51,6 +59,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 3,
+                    Sku = "DX218ED",
                     Name = "Jacket",
                     Quantity = 50,
                     Price = 49.90m,
@@ -60,6 +69,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 4,
+                    Sku = "SI972YV",
                     Name = "Pants",
                     Quantity = 70,
                     Price = 27.90m,
@@ -69,6 +79,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 5,
+                    Sku = "FL560RX",
                     Name = "Shirt",
                     Quantity = 35,
                     Price = 19.90m,
@@ -78,6 +89,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 6,
+                    Sku = "QJ736BG",
                     Name = "Shoes",
                     Quantity = 90,
                     Price = 59.90m,
@@ -87,6 +99,7 @@ public class ProductsConfiguration : IEntityTypeConfiguration<Product>
                 new Product
                 {
                     Id = 7,
+                    Sku = "CM214JK",
                     Name = "Sweater",
                     Quantity = 25,
                     Price = 30.90m,
