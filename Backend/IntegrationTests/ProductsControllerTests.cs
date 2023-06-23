@@ -129,6 +129,7 @@ public class ProductsControllerTests
         var result = (ObjectResult)controller.Delivery(_products);
         
         Assert.Equal(200, result.StatusCode);
+        Assert.Equal("Successful delivery", result.Value);
         Assert.Equal(80, dbContext.Products.ToList().ElementAt(0).Quantity);
         Assert.Equal(160, dbContext.Products.ToList().ElementAt(1).Quantity);
     }
@@ -166,6 +167,43 @@ public class ProductsControllerTests
     }
 
     [Fact]
+    public void UpdateProductsQuantities_UpdatedProductsQuantities()
+    {
+        List<UpdateProductQuantityDto> products = new List<UpdateProductQuantityDto>
+        {
+            new UpdateProductQuantityDto()
+            {
+                Id = 1,
+                Quantity = 10
+            },
+            
+            new UpdateProductQuantityDto
+            {
+                Id = 2,
+                Quantity = -5
+            },
+            
+            new UpdateProductQuantityDto
+            {
+                Id = 3,
+                Quantity = 20
+            }
+        };
+        
+        var dbContext = CreateDbContext(_options, _products);
+        var service = new ProductsService(dbContext);
+        var controller = new ProductsController(service);
+
+        var result = (ObjectResult)controller.UpdateProductsQuantities(products);
+        
+        Assert.Equal(200, result.StatusCode);
+        Assert.Equal("Quantities updated", result.Value);
+        Assert.Equal(2, dbContext.Products.Count());
+        Assert.Equal(50, dbContext.Products.ToList().ElementAt(0).Quantity);
+        Assert.Equal(75, dbContext.Products.ToList().ElementAt(1).Quantity);
+    }
+
+    [Fact]
     public void EditProduct_GivenExistingId_UpdatesProduct()
     {
         var editedProduct = new EditProductDto
@@ -182,6 +220,7 @@ public class ProductsControllerTests
         var result = (ObjectResult)controller.EditProduct(editedProduct);
         
         Assert.Equal(200, result.StatusCode);
+        Assert.Equal("Product updated", result.Value);
         Assert.Equal("Shirt", dbContext.Products.Single(p => p.Id == editedProduct.Id).Name);
         Assert.Equal(19.90m, dbContext.Products.Single(p => p.Id == editedProduct.Id).Price);
     }
