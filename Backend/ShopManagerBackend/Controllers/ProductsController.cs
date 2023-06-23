@@ -42,6 +42,14 @@ public class ProductsController : ControllerBase
         return Ok("Successful delivery");
     }
 
+    [HttpPatch("UpdateQuantities")]
+    public ActionResult UpdateProductsQuantities([FromBody] List<UpdateProductQuantityDto> products)
+    {
+        _productsService.UpdateProductsQuantities(products);
+
+        return Ok("Quantities updated");
+    }
+
     [HttpPatch("Edit")]
     public ActionResult EditProduct([FromBody]EditProductDto product)
     {

@@ -10,6 +10,7 @@ public interface IProductsService
     IEnumerable<Product> GetAvailableProducts();
     Product GetProductById(int id);
     void Delivery(List<Product> products);
+    void UpdateProductsQuantities(List<UpdateProductQuantityDto> products);
     void EditProduct(EditProductDto product);
     void DeleteProduct(int id);
 }
@@ -56,6 +57,24 @@ public class ProductsService : IProductsService
 
             else
                 _dbContext.Products.Add(product);
+        }
+
+        _dbContext.SaveChanges();
+    }
+
+    public void UpdateProductsQuantities(List<UpdateProductQuantityDto> products)
+    {
+        if (products.Count < 1)
+            return;
+        
+        List<Product> availableProducts = GetAvailableProducts().ToList();
+        
+        foreach (UpdateProductQuantityDto product in products)
+        {
+            Product? productFromDb = availableProducts.SingleOrDefault(p => p.Id == product.Id);
+
+            if (productFromDb is not null)
+                productFromDb.Quantity += product.Quantity;
         }
 
         _dbContext.SaveChanges();
