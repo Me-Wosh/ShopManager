@@ -15,6 +15,14 @@ builder.Services.AddDbContext<ShopManagerDbContext>(options =>
     options.UseSqlServer("name=ConnectionStrings:ShopManagerDb"));
 builder.Services.AddScoped<IProductsService, ProductsService>();
 builder.Services.AddScoped<ExceptionHandlingMiddleware>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173");
+        });
+});
 
 var app = builder.Build();
 
@@ -28,6 +36,8 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 
