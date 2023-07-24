@@ -35,7 +35,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("Delivery")]
-    public ActionResult Delivery([FromBody]List<Product> products)
+    public ActionResult Delivery([FromBody]List<DeliveryProductDto> products)
     {
         _productsService.Delivery(products);
         

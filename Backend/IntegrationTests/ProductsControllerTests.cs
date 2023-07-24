@@ -11,6 +11,7 @@ namespace IntegrationTests;
 public class ProductsControllerTests
 {
     private List<Product> _products;
+    private List<DeliveryProductDto> _deliveryProductsDtos;
     private DbContextOptions<ShopManagerDbContext> _options;
 
     public ProductsControllerTests()
@@ -30,6 +31,27 @@ public class ProductsControllerTests
             new Product
             {
                 Id = 2,
+                Sku = "MN632FD",
+                Name = "Hoodie",
+                Quantity = 80,
+                Price = 35.90m,
+                ImagePath = "Assets/Hoodie.svg"
+            }
+        };
+        
+        _deliveryProductsDtos = new List<DeliveryProductDto>
+        {
+            new DeliveryProductDto
+            {
+                Sku = "HX421RO",
+                Name = "Hat",
+                Quantity = 40,
+                Price = 16.90m,
+                ImagePath = "Assets/Hat.svg"
+            },
+                
+            new DeliveryProductDto
+            {
                 Sku = "MN632FD",
                 Name = "Hoodie",
                 Quantity = 80,
@@ -126,7 +148,7 @@ public class ProductsControllerTests
         var service = new ProductsService(dbContext);
         var controller = new ProductsController(service);
 
-        var result = (ObjectResult)controller.Delivery(_products);
+        var result = (ObjectResult)controller.Delivery(_deliveryProductsDtos);
         
         Assert.Equal(200, result.StatusCode);
         Assert.Equal("Successful delivery", result.Value);
@@ -137,9 +159,9 @@ public class ProductsControllerTests
     [Fact]
     public void Delivery_GivenNonExistingProducts_CreatesNewProductsEntities()
     {
-        var productsFromDelivery = new List<Product>
+        var productsFromDelivery = new List<DeliveryProductDto>
         {
-            new Product
+            new DeliveryProductDto
             {
                 Sku = "DX218ED",
                 Name = "Jacket",
@@ -147,7 +169,7 @@ public class ProductsControllerTests
                 Price = 49.90m
             },
 
-            new Product
+            new DeliveryProductDto
             {
                 Sku = "SI972YV",
                 Name = "Pants",
