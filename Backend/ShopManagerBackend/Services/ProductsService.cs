@@ -9,7 +9,7 @@ public interface IProductsService
     IEnumerable<Product> GetAllProducts();
     IEnumerable<Product> GetAvailableProducts();
     Product GetProductById(int id);
-    void Delivery(List<Product> products);
+    void Delivery(List<DeliveryProductDto> products);
     void UpdateProductsQuantities(List<UpdateProductQuantityDto> products);
     void EditProduct(EditProductDto product);
     void DeleteProduct(int id);
@@ -41,14 +41,14 @@ public class ProductsService : IProductsService
         return product ?? throw new NotFoundException($"Product of id: {id} not found");
     }
 
-    public void Delivery(List<Product> productsFromDelivery)
+    public void Delivery(List<DeliveryProductDto> productsFromDelivery)
     {
         if (productsFromDelivery.Count < 1)
             return;
 
         List<Product> productsFromDb = GetAllProducts().ToList();
 
-        foreach (Product product in productsFromDelivery)
+        foreach (DeliveryProductDto product in productsFromDelivery)
         {
             Product? productFromDb = productsFromDb.SingleOrDefault(p => p.Sku == product.Sku);
 
@@ -56,7 +56,16 @@ public class ProductsService : IProductsService
                 productFromDb.Quantity += product.Quantity;
 
             else
-                _dbContext.Products.Add(product);
+            {
+                _dbContext.Products.Add(new Product
+                {
+                    Sku = product.Sku,
+                    Name = product.Name,
+                    Quantity = product.Quantity,
+                    Price = product.Price,
+                    ImagePath = product.ImagePath
+                });
+            }
         }
 
         _dbContext.SaveChanges();
