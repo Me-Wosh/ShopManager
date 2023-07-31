@@ -1,16 +1,19 @@
 <script>
-  import CellComponent from "../components/CellComponent.vue";
   import ProductComponent from "../components/ProductComponent.vue";
+  import ShelfComponent from "../components/ShelfComponent.vue";
   import axios from "axios";
+  import {v4 as uuidv4} from "uuid";
   
   export default {
     components: {
-      CellComponent, 
+      ShelfComponent,
       ProductComponent
     },
     
     data() {
       return {
+        blocks: [],
+        
         products: [{id: -1, imagePath: "assets/Hat.svg", name: "Hat", price: 99.9, quantity: 1000000, sku: "HX421RO"},
           {id: -2, imagePath: "assets/Hoodie.svg", name: "Hoodie", price: 16.9, quantity: 0, sku: "HX421RO"},
           {id: -3, imagePath: "assets/Jacket.svg", name: "Jacket", price: 99999.9, quantity: 40, sku: "HX421RO"},
@@ -36,6 +39,10 @@
         productsToUpdate: [],
         
         deliveryProducts: [],
+        
+        mouseX: 0,
+        
+        mouseY: 0,
         
         filter: null,
         
@@ -92,6 +99,29 @@
               this.deliveryProducts.length = 0
               this.showEditableProduct = false
             })
+      },
+      
+      addShelf() {
+        this.blocks.push({id: uuidv4(), type: 'shelf'})
+      },
+      
+      readjustBlockPosition(blockId, blockTop, blockLeft) {
+        let gridPos = this.$refs.grid.getBoundingClientRect()
+        
+        if (
+            blockTop + 11 <= gridPos.top || 
+            blockTop + 11 >= gridPos.bottom || 
+            blockLeft + 11 <= gridPos.left || 
+            blockLeft + 11 >= gridPos.right
+        ) {
+          let index = this.blocks.findIndex(b => b.id === blockId)
+          this.blocks.splice(index, 1)
+        } else {
+          return {
+            top: (blockTop - gridPos.top) % 20,
+            left: (blockLeft - gridPos.left) % 20
+          }
+        }
       },
 
       reduceQuantity(product) {
@@ -214,10 +244,23 @@
 </script>
 
 <template>
-  <div class="window">
+  <div class="window" @mousemove="(e) => {mouseX = e.pageX; mouseY = e.pageY}">
     <div class="main" :style="{'opacity': opacity, 'filter': 'blur('+blur+'px)'}" @click="showSearchProducts=false">
-      <div class="grid">
-        <CellComponent v-for="i in 30*30"/>
+      <div class="gridAndBlocks">
+        <div class="grid" ref="grid">
+          <div class="cell" v-for="i in 30*30" :key="i"/>
+        </div>
+        <div class="blocks">
+          <div class="shelfCreator" @click="addShelf"></div>
+          <ShelfComponent
+              v-for="block in blocks"
+              :key="block.id"
+              :id="block.id"
+              :mouse-x="mouseX"
+              :mouse-y="mouseY"
+              :readjust-position="readjustBlockPosition"
+          />
+        </div>
       </div>
       <div class="productsWrapper">
         <div class="title">
@@ -347,13 +390,41 @@
     justify-content: space-around;
     align-self: center;
   }
+
+  .gridAndBlocks {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
   
   .grid {
     display: grid;
     align-self: center;
     grid-template-columns: repeat(30, 20px);
     grid-template-rows: repeat(30, 20px);
-    border: 1px solid black;
+    border-left: 1px solid black;
+    border-top: 1px solid black;
+  }
+
+  .cell {
+    box-sizing: border-box;
+    height: 20px;
+    width: 20px;
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
+  }
+  
+  .blocks {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+  }
+  
+  .shelfCreator {
+    width: 50px;
+    height: 50px;
+    background-color: #6394e3;
   }
   
   .productsWrapper {
@@ -363,7 +434,7 @@
     width: 355px;
     align-self: center;
     border: 3px solid #6ba7ff;
-    border-radius: 20px;
+    border-radius: 15px;
   }
   
   .title {
@@ -417,6 +488,8 @@
   
   .productsToUpdate {
     padding: 0.3em;
+    user-select: auto;
+    -webkit-user-select: auto;
   }
   
   .productActions {
