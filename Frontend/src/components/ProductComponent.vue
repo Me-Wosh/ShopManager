@@ -5,6 +5,9 @@
     
     props: ['sku', 'name', 'price', 'quantity', 'imagePath', 'isDelivery', 'isEditable', 'showDeliveryPanel'],
     
+    emits: ['addNewProduct', 'removeDeliveryProduct', 'cancelAddingProduct', 'reduceDeliveryQuantity', 
+      'reduceQuantity', 'increaseDeliveryQuantity', 'increaseQuantity'],
+    
     data () {
       return {
         image: 'src/' + this.imagePath,
@@ -146,6 +149,8 @@
     border: 1px solid #6394e3;
     border-radius: 10px;
     box-sizing: border-box;
+    user-select: auto;
+    -webkit-user-select: auto;
   }
   
   input {
