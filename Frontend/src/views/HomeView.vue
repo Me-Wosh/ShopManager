@@ -3,9 +3,11 @@
   import ShelfComponent from "../components/ShelfComponent.vue";
   import axios from "axios";
   import {v4 as uuidv4} from "uuid";
+  import SearchPanelComponent from "@/components/SearchPanelComponent.vue";
   
   export default {
     components: {
+      SearchPanelComponent,
       ShelfComponent,
       ProductComponent
     },
@@ -34,6 +36,14 @@
           {id: -3, imagePath: "assets/Jacket.svg", name: "Jacket", price: 99999.9, quantity: 40, sku: "HX421RO"},
           {id: -4, imagePath: "assets/Pants.svg", name: "Pants", price: 16.9, quantity: 1, sku: "HX421RO"},
           {id: -5, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -43, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -43321, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -48753, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -43213, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -4543, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -465, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -9, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
+          {id: -8, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
           {id: -6, imagePath: "assets/Shoes.svg", name: "Shoes", price: 16.9, quantity: 40, sku: "HX421RO"}],
         
         productsToUpdate: [],
@@ -44,7 +54,9 @@
         
         mouseY: 0,
         
-        filter: null,
+        gridX: null,
+        
+        gridY: null,
         
         opacity: 1,
         
@@ -101,18 +113,18 @@
             })
       },
       
-      addShelf() {
-        this.blocks.push({id: uuidv4(), type: 'shelf'})
+      addShelf(width, height) {
+        this.blocks.push({id: uuidv4(), type: 'shelf', width: width, height: height})
       },
       
-      readjustBlockPosition(blockId, blockTop, blockLeft) {
+      readjustBlockPosition(blockId, blockTop, blockLeft, blockWidth, blockHeight) {
         let gridPos = this.$refs.grid.getBoundingClientRect()
         
         if (
             blockTop + 11 <= gridPos.top || 
-            blockTop + 11 >= gridPos.bottom || 
+            blockTop + blockHeight - 11 >= gridPos.bottom || 
             blockLeft + 11 <= gridPos.left || 
-            blockLeft + 11 >= gridPos.right
+            blockLeft + blockWidth - 11 >= gridPos.right
         ) {
           let index = this.blocks.findIndex(b => b.id === blockId)
           this.blocks.splice(index, 1)
@@ -225,41 +237,50 @@
       cancelAddingNewProduct() {
         this.showEditableProduct = false
       }
-    },
-    
-    computed: {
-      searchProduct() {
-        if (this.filter == null)
-          return this.products
-        
-        if (this.products.filter(p => p.name.toLowerCase().includes(this.filter.toLowerCase())).length < 
-            this.products.filter(p => p.sku.toLowerCase().includes(this.filter.toLowerCase())).length) {
-          return this.products.filter(p => p.sku.toLowerCase().includes(this.filter.toLowerCase()))
-        }
-
-        return this.products.filter(p => p.name.toLowerCase().includes(this.filter.toLowerCase()))
-      }
     }
   }
 </script>
 
 <template>
-  <div class="window" @mousemove="(e) => {mouseX = e.pageX; mouseY = e.pageY}">
-    <div class="main" :style="{'opacity': opacity, 'filter': 'blur('+blur+'px)'}" @click="showSearchProducts=false">
+  <div class="window" @mousemove="(e) => {mouseX = e.clientX; mouseY = e.clientY}">
+    <div class="main" :style="{'opacity': opacity, 'filter': 'blur(' + blur + 'px)'}" @click="showSearchProducts=false">
       <div class="gridAndBlocks">
-        <div class="grid" ref="grid">
+        <div 
+            class="grid"
+            ref="grid" 
+            @mousemove="gridX = this.$refs.grid.getBoundingClientRect().x; gridY = this.$refs.grid.getBoundingClientRect().y"
+        >
           <div class="cell" v-for="i in 30*30" :key="i"/>
-        </div>
-        <div class="blocks">
-          <div class="shelfCreator" @click="addShelf"></div>
           <ShelfComponent
               v-for="block in blocks"
               :key="block.id"
               :id="block.id"
+              :width="block.width"
+              :height="block.height"
               :mouse-x="mouseX"
               :mouse-y="mouseY"
+              :grid-x="gridX"
+              :grid-y="gridY"
               :readjust-position="readjustBlockPosition"
+              :available-products="availableProducts"
           />
+        </div>
+        <div class="blocks">
+          <div class="horizontalBlocks">
+            <div class="shelf1x1" @click="addShelf(20,20)"></div>
+            <div class="shelf2x1" @click="addShelf(40,20)"></div>
+            <div class="shelf3x1" @click="addShelf(60,20)"></div>
+            <div class="shelf4x1" @click="addShelf(80,20)"></div>
+            <div class="shelf5x1" @click="addShelf(100,20)"></div>
+            <div class="shelf6x1" @click="addShelf(120,20)"></div>
+          </div>
+          <div class="verticalBlocks">
+            <div class="shelf1x2" @click="addShelf(20,40)"></div>
+            <div class="shelf1x3" @click="addShelf(20,60)"></div>
+            <div class="shelf1x4" @click="addShelf(20,80)"></div>
+            <div class="shelf1x5" @click="addShelf(20,100)"></div>
+            <div class="shelf1x6" @click="addShelf(20,120)"></div>
+          </div>
         </div>
       </div>
       <div class="productsWrapper">
@@ -319,25 +340,17 @@
     <div class="deliveryPanel" v-if="showDeliveryPanel">
       <div class="deliveryTitle">
         <p>Delivery</p>
-        <div class="searchContainer">
-          <input 
-              class="search" 
-              placeholder="Search for a product..."
-              @click="showSearchProducts=true" 
-              @keydown.esc="showSearchProducts=false"
-              v-model="filter"
-          />
-          <div class="searchProducts" v-if="showSearchProducts">
-            <div 
-                class="searchProduct" 
-                v-for="product in searchProduct" 
-                :key="product.id" 
-                @click="addDeliveryProduct(product)"
-            >
-              {{product.name}} [{{product.sku}}] ({{product.quantity}})
-            </div>
-          </div>
-        </div>
+        
+        <SearchPanelComponent
+            :products="products"
+            :show="showSearchProducts"
+            :width="'300px'"
+            :height="'295px'"
+            @add-product="addDeliveryProduct"
+            @click="showSearchProducts=true"
+            @keydown.esc="showSearchProducts=false"
+        />
+        
         <i title="Close" class="bi bi-x-circle exitButton" @click="closeDeliveryPanel"></i>
       </div>
       <div class="deliveryProducts" @click="showSearchProducts=false">
@@ -398,6 +411,7 @@
   }
   
   .grid {
+    position: relative;
     display: grid;
     align-self: center;
     grid-template-columns: repeat(30, 20px);
@@ -415,22 +429,87 @@
   }
   
   .blocks {
+    margin-top: 0.5em;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .horizontalBlocks, .verticalBlocks {
+    display: flex;
+    gap: 0.3em;
+  }
+  
+  .horizontalBlocks {
+    flex-direction: column;
+  }
+  
+  .horizontalBlocks > *, .verticalBlocks > * {
+    border: 1px solid black;
+    background-color: #6394e3;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+  }
+  
+  .shelf1x1 {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .shelf2x1 {
+    width: 40px;
+    height: 20px;
+  }
+
+  .shelf3x1 {
+    width: 60px;
+    height: 20px;
+  }
+  
+  .shelf4x1 {
+    width: 80px;
+    height: 20px;
+  }
+
+  .shelf5x1 {
+    width: 100px;
+    height: 20px;
+  }
+  
+  .shelf6x1 {
+    width: 120px;
+    height: 20px;
+  }
+  
+  .shelf1x2 {
+    width: 20px;
+    height: 40px;
+  }
+
+  .shelf1x3 {
+    width: 20px;
+    height: 60px;
+  }
+
+  .shelf1x4 {
+    width: 20px;
+    height: 80px;
+  }
+  
+  .shelf1x5 {
+    width: 20px;
     height: 100px;
   }
   
-  .shelfCreator {
-    width: 50px;
-    height: 50px;
-    background-color: #6394e3;
+  .shelf1x6 {
+    width: 20px;
+    height: 120px;
   }
   
   .productsWrapper {
     display: flex;
     flex-direction: column;
-    height: 700px;
+    height: 745px;
     width: 355px;
     align-self: center;
     border: 3px solid #6ba7ff;
@@ -536,41 +615,6 @@
     margin: 0;
     font-size: larger;
     align-self: center;
-  }
-  
-  .searchContainer {
-    position: relative;
-  }
-  
-  .search {
-    height: 20px;
-    width: 300px;
-    font-size: large;
-  }
-  
-  .searchProducts {
-    position: absolute;
-    z-index: 1;
-    width: 304px;
-    max-height: 295px;
-    overflow-y: auto;
-    background-color: white;
-    border-left: 1px solid black;
-    border-bottom: 1px solid black;
-    border-right: 1px solid black;
-  }
-  
-  .searchProduct {
-    padding: 0.3em;
-    border-bottom: 1px solid black;
-  }
-  
-  .searchProduct:nth-last-child(1) {
-    border-bottom: none;
-  }
-  
-  .searchProducts:hover {
-    cursor: pointer;
   }
   
   .exitButton {
