@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopManagerBackend.Entities;
 using ShopManagerBackend.Models;
@@ -50,7 +51,7 @@ public class ProductsController : ControllerBase
         return Ok("Quantities updated");
     }
 
-    [HttpPatch("Edit")]
+    [HttpPatch("Edit"), Authorize(Roles = "Admin")]
     public ActionResult EditProduct([FromBody]EditProductDto product)
     {
         _productsService.EditProduct(product);
@@ -58,7 +59,7 @@ public class ProductsController : ControllerBase
         return Ok("Product updated");
     }
 
-    [HttpDelete("Delete/{id}")]
+    [HttpDelete("Delete/{id}"), Authorize(Roles = "Admin")]
     public ActionResult DeleteProduct([FromRoute] int id)
     {
         _productsService.DeleteProduct(id);
