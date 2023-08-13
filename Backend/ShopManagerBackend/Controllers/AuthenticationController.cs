@@ -16,7 +16,7 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("Login")]
-    public ActionResult<string> Login([FromForm]UserLoginDto userLoginDto)
+    public ActionResult<string> Login([FromBody]UserLoginDto userLoginDto)
     {
         return Ok(_authenticationService.Login(userLoginDto));
     }
