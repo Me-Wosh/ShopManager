@@ -96,19 +96,19 @@ public class ProductsService : IProductsService
         if (productFromDb is null)
             throw new NotFoundException($"Product of id: {product.Id} not found");
         
-        if (product.Sku != null && product.Sku != productFromDb.Sku)
+        if (product.Sku != productFromDb.Sku)
             productFromDb.Sku = product.Sku;
         
-        if (product.Name != null && product.Name != productFromDb.Name)
+        if (product.Name != productFromDb.Name)
             productFromDb.Name = product.Name;
 
-        if (product.Quantity != null && product.Quantity != productFromDb.Quantity)
-            productFromDb.Quantity = (int)product.Quantity;
+        if (product.Quantity != productFromDb.Quantity)
+            productFromDb.Quantity = product.Quantity;
 
-        if (product.Price != null && product.Price != productFromDb.Price)
-            productFromDb.Price = (int)product.Price;
+        if (product.Price != productFromDb.Price)
+            productFromDb.Price = product.Price;
 
-        if (product.ImagePath != null && product.ImagePath != productFromDb.ImagePath)
+        if (product.ImagePath != productFromDb.ImagePath)
             productFromDb.ImagePath = product.ImagePath;
 
         _dbContext.SaveChanges();
