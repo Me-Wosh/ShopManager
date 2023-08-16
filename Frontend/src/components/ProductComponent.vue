@@ -1,47 +1,47 @@
 <script>
-  import {v4 as uuidv4} from "uuid";
   export default {
-    name: "ProductComponent",
-    
-    props: ['sku', 'name', 'price', 'quantity', 'imagePath', 'isDelivery', 'isEditable', 'showDeliveryPanel'],
-    
-    emits: ['addNewProduct', 'removeDeliveryProduct', 'cancelAddingProduct', 'reduceDeliveryQuantity', 
-      'reduceQuantity', 'increaseDeliveryQuantity', 'increaseQuantity'],
+    props: ['id', 'sku', 'name', 'quantity', 'price', 'imagePath', 'isEditable', 'isDelivery'],
+    emits: ['update', 'remove', 'reduceQuantity', 'increaseQuantity'],
     
     data () {
       return {
         image: 'src/' + this.imagePath,
-        editableProduct: {sku: '', name: '', quantity: null, price: null, imagePath: null}
+        editableMode: false,
+        editedProduct: {
+          id: this.id,
+          name: this.name,
+          sku: this.sku,
+          quantity: this.quantity,
+          price: this.price,
+          imagePath: this.imagePath
+        },
+        validationError: null
       }
     },
     
     methods: {
-      addNewProduct() {
-        if (this.invalidData) {
+      makeValidPrice () {
+        isNaN(parseFloat(this.editedProduct.price))
+            ? this.editedProduct.price = '0.00'
+            : this.editedProduct.price = parseFloat(this.editedProduct.price).toFixed(2)
+      },
+      
+      editProduct () {
+        if (!this.editedProduct.sku || 
+            !this.editedProduct.name || 
+            this.editedProduct.quantity === '' || 
+            this.editedProduct.price === ''
+        ) {
+          this.validationError = 'Please fill required fields'
           return
+        } else if (this.editedProduct.sku.length > 50 || this.editedProduct.name.length > 50) {
+            this.validationError = 'SKU or Name too long. Maximum length: 50'
+            return
         }
         
-        let id = uuidv4()
-        
-        let price = this.editableProduct.price ?? 0
-        
-        if (price > 0 && price < 0.01)
-          price = 0.01
-        
-        let quantity = this.editableProduct.quantity ?? 0
-        
-        this.$emit('add-new-product', id, this.editableProduct.sku, this.editableProduct.name, quantity, price, 
-                                      this.editableProduct.imagePath)
-      }
-    },
-    
-    computed: {
-      invalidData() {
-        if (!this.editableProduct.sku.trim() || !this.editableProduct.name.trim())
-          return "Please fill required information"
-        
-        if (this.editableProduct.sku.length > 50 || this.editableProduct.name.length > 50)
-          return "SKU or Name too long, max length: 50"
+        this.$emit('update', this.editedProduct) 
+        this.editableMode = false
+        this.validationError = null
       }
     }
   }
@@ -49,88 +49,63 @@
 
 <template>
   <div class="pane">
-    <img 
-        v-if="!isEditable"
-        :src="image" 
-        @error="this.image = 'src/assets/No-Image.svg'" 
-        :alt="name + ' image'"
-    />
-    <i 
-        v-if="isDelivery || isEditable" 
-        :title="isDelivery? 'Remove product' : 'Cancel'" 
-        class="bi bi-x-circle removeButton" 
-        @click="isDelivery ? this.$emit('remove-delivery-product') : this.$emit('cancel-adding-product')"
-    >
-    </i>
-
-    <label for="sku" v-if="isEditable">SKU*</label>
-    <input id="sku" v-if="isEditable" v-model="editableProduct.sku"/>
-    
-    <p v-if="!isEditable" class="name">{{ name }}</p>
-    
-    <label for="name" v-if="isEditable">Name*</label>
-    <input id="name" v-if="isEditable" v-model="editableProduct.name"/>
-    
-    <p class="sku" v-if="isDelivery">[{{sku}}]</p>
-    
-    <label for="price" v-if="isEditable">Price ($USD)</label>
-    <input 
-        id="price" 
-        v-if="isEditable"
-        @input="editableProduct.price = editableProduct.price.replace(/[^0-9.]/g, '')"
-        @focusout="isNaN(parseFloat(editableProduct.price)) ? editableProduct.price = 0 : 
-                   parseFloat(editableProduct.price) > 0 && parseFloat(editableProduct.price) < 0.01 ? editableProduct.price = 0.01 : 
-                   editableProduct.price = parseFloat(editableProduct.price).toFixed(2)"
-        v-model="editableProduct.price"
-        placeholder="$0.00"
-    />
-    
-    <p v-if="!isEditable" class="price">{{ Intl.NumberFormat("en", { style: "currency", currency: "USD" }).format(price) }}</p>
-    
-    <label for="imagePath" v-if="isEditable">Image Path</label>
-    <input 
-        id="imagePath"
-        v-if="isEditable" 
-        v-model="editableProduct.imagePath" 
-        placeholder="None"/>
-    
-    <div class="quantityContainer">
-      <button 
-          :disabled="showDeliveryPanel"
-          @click="isDelivery ? this.$emit('reduce-delivery-quantity') : 
-          isEditable ? (this.editableProduct.quantity > 0 ? this.editableProduct.quantity-- : this.editableProduct.quantity = 0) : 
-          this.$emit('reduce-quantity')"
-          class="changeQuantityLeft"
-      >
-        <i class="bi bi-dash changeQuantityIcon"></i>
+    <div v-if="isEditable || isDelivery" class="options" :style="{'justify-content': isEditable ? 'space-between' : 'flex-end'}">
+      <button v-if="isEditable" @click="editableMode = !editableMode" class="iconButton edit" title="Edit">
+        <i class="bi bi-pencil-square"></i>
       </button>
       
-      <p v-if="!isEditable" class="quantity">{{ quantity }}</p>
-      
-      <input
-          v-if="isEditable"
-          @input="editableProduct.quantity = editableProduct.quantity.replace(/[^0-9]/g, '')"
-          v-model="editableProduct.quantity"
-          class="quantity"
-          placeholder="0"
-      />
-      
-      <button
-          :disabled="showDeliveryPanel"
-          @click="isDelivery? this.$emit('increase-delivery-quantity') : 
-          isEditable ? this.editableProduct.quantity++ : this.$emit('increase-quantity')"
-          class="changeQuantityRight"
-      >
-        <i class="bi bi-plus changeQuantityIcon"></i>
+      <button @click="this.$emit('remove', id)" class="iconButton remove" title="Remove">
+        <i class="bi bi-x-circle"></i>
       </button>
     </div>
     
-    <p v-if="isEditable" class="required">* required</p>
+    <img :src="image" :alt="name + ' image'" @error="image = 'src/assets/No-Image.svg'"/>
+    <input v-if="editableMode" v-model="editedProduct.imagePath" type="text" placeholder="Image path" />
     
-    <p v-if="isEditable" class="errorMessage">{{invalidData}}</p>
+    <div class="fieldContainer">
+      <p>{{ name }}</p><p v-if="editableMode">*</p>
+    </div>
+    <input v-if="editableMode" v-model="editedProduct.name" type="text" placeholder="Name" />
     
-    <button v-if="isEditable" class="addButton action" @click="addNewProduct">
-      <i class="bi bi-plus-lg"></i>
+    <div class="fieldContainer">
+      <p v-if="sku">[{{ sku }}]</p><p v-if="editableMode">*</p>
+    </div>
+    <input v-if="editableMode" v-model="editedProduct.sku" type="text" placeholder="SKU" />
+
+    <div class="fieldContainer">
+      <p>{{Intl.NumberFormat("en", { style: "currency", currency: "USD" }).format(price)}}</p><p v-if="editableMode">*</p>
+    </div>
+    <input 
+        v-if="editableMode" 
+        v-model="editedProduct.price"
+        @input="editedProduct.price = editedProduct.price.replace(/[^0-9.]/g, '')"
+        @focusout="makeValidPrice"
+        type="text" 
+        placeholder="Price" 
+    />
+
+    <div class="fieldContainer">
+      <p v-if="isEditable">Quantity: {{ quantity }}</p><p v-if="editableMode">*</p>
+    </div>
+    <input v-if="editableMode" v-model="editedProduct.quantity" @input="editedProduct.quantity = editedProduct.quantity.replace(/[^0-9]/g, '')" type="text" placeholder="Quantity" />
+
+    <div v-if="!isEditable" class="quantityContainer">
+      <button @click="this.$emit('reduceQuantity', id)" class="quantityButton">
+        <i class="bi bi-dash"></i>
+      </button>
+
+      <p>{{ quantity }}</p>
+
+      <button @click="this.$emit('increaseQuantity', id)" class="quantityButton">
+        <i class="bi bi-plus"></i>
+      </button>
+    </div>
+    
+    <p v-if="editableMode" class="required">* required</p>
+    <p v-if="validationError" class="validationError">{{ validationError }}</p>
+    
+    <button v-if="editableMode" @click="editProduct" class="updateButton">
+      Update
     </button>
   </div>
 </template>
@@ -140,7 +115,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     gap: 0.2em;
     padding: 0.5em;
@@ -153,12 +128,9 @@
     -webkit-user-select: auto;
   }
   
-  input {
-    width: 90%;
-  }
-  
-  label {
-    margin: 0.2em;
+  .options {
+    display: flex;
+    align-self: normal;
   }
   
   img {
@@ -166,92 +138,105 @@
     width: 45px;
   }
   
-  .removeButton {
-    position: absolute;
-    display: flex;
-    align-self: center;
-    top: 5px;
-    right: 5px;
-    height: 16px;
-    border-radius: 50%;
-  }
-  
-  .removeButton:hover {
-    background-color: #ff5454;
-  }
-  
-  .name {
-    font-size: 1.2em;
-    word-wrap: break-word;
-  }
-  
   p {
     margin: 0;
     padding: 0;
   }
-
+  
+  .fieldContainer {
+    display: flex;
+  }
+  
   .quantityContainer {
     display: flex;
-    justify-content: center;
-    max-width: 150px;
-    border: 1px solid gray;
+    align-items: center;
+    column-gap: 0.4em;
+    border: 1px solid black;
     border-radius: 5px;
-  }
-  
-  .quantity {
-    display: flex;
-    justify-content: center;
-    align-self: center;
-    min-width: 1.7em;
-    font-size: 1.2em;
-    overflow-x: auto;
-  }
-  
-  .changeQuantityLeft, .changeQuantityRight {
-    border: none;
-    background-color: white;
+    font-size: large;
   }
 
-  .changeQuantityIcon {
+  .quantityButton {
+    padding: 0.1em;
+    font-size: x-large;
+    background-color: transparent;
+  }
+  
+  .quantityButton:active {
+    background-color: lightgray;
+  }
+  
+  .quantityButton:first-child {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-right: 1px solid black;
+  }
+
+  .quantityButton:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-left: 1px solid black;
+  }
+  
+  button {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: none;
+  }
+  
+  button:enabled:hover {
+    cursor: pointer;
+  }
+  
+  .updateButton {
+    padding: 0.2em;
+    height: 30px;
+    align-self: center;
+    border-radius: 5px;
+    background-color: #6ba7ff;
+    color: white;
+    font-size: 14px;
+  }
+
+  .updateButton:hover {
+    background-color: #6394e3;
+  }
+
+  .updateButton:active {
+    background-color: #5981c7;
+  }
+
+  .updateButton:disabled {
+    background-color: gray;
+  }
+
+  .iconButton {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 1.35em;
-    width: 1.35em;
-    font-size: x-large;
+    background-color: transparent;
+    font-size: medium;
   }
   
-  .changeQuantityLeft {
-    border-right: 1px solid black;
-    border-bottom-left-radius: 4px;
-    border-top-left-radius: 4px;
-  }
-  
-  .changeQuantityRight {
-    border-left: 1px solid black;
-    border-bottom-right-radius: 4px;
-    border-top-right-radius: 4px;
+  .iconButton:disabled {
+    color: rgba(0, 0, 0, 0.35);
   }
 
-  .changeQuantityLeft:enabled:active, .changeQuantityRight:enabled:active {
-    background-color: lightgray;
+  .edit:enabled:hover {
+    color: #6ba7ff;
   }
 
-  .changeQuantityLeft:disabled, .changeQuantityRight:disabled {
-    color: inherit;
+  .remove:enabled:hover {
+    color: #ff5454;
   }
   
   .required {
-    font-size: smaller;
+    font-size: x-small;
   }
   
-  .errorMessage {
-    color: #ff3d3d;
+  .validationError {
     font-size: small;
-  }
-  
-  .addButton {
-    align-self: center;
-    border: 1px solid black;
+    color: #ff5454;
   }
 </style>
