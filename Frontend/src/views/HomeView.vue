@@ -4,9 +4,12 @@
   import axios from "axios";
   import {v4 as uuidv4} from "uuid";
   import SearchPanelComponent from "@/components/SearchPanelComponent.vue";
+  import NewProductComponent from "@/components/NewProductComponent.vue";
+  import {useProductsStore} from "@/stores/products";
   
   export default {
     components: {
+      NewProductComponent,
       SearchPanelComponent,
       ShelfComponent,
       ProductComponent
@@ -15,36 +18,6 @@
     data() {
       return {
         blocks: [],
-        
-        products: [{id: -1, imagePath: "assets/Hat.svg", name: "Hat", price: 99.9, quantity: 1000000, sku: "HX421RO"},
-          {id: -2, imagePath: "assets/Hoodie.svg", name: "Hoodie", price: 16.9, quantity: 0, sku: "HX421RO"},
-          {id: -3, imagePath: "assets/Jacket.svg", name: "Jacket", price: 99999.9, quantity: 40, sku: "HX421RO"},
-          {id: -4, imagePath: "assets/Pants.svg", name: "Pants", price: 16.9, quantity: 1, sku: "BB432NX"},
-          {id: -5, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -13, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -12, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -11, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -1543, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -132, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -1321, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -1765, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -1432, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -6, imagePath: "assets/Shoes.svg", name: "Shoes", price: 16.9, quantity: 40, sku: "HX421RO"}],
-        
-        availableProducts: [{id: -1, imagePath: "assets/Hat.svg", name: "A suspiciously long name for a regular hat", price: 99.9, quantity: 10000000, sku: "HX421RO"},
-          {id: -2, imagePath: "assets/Hoodie.svg", name: "Hoodie", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -3, imagePath: "assets/Jacket.svg", name: "Jacket", price: 99999.9, quantity: 40, sku: "HX421RO"},
-          {id: -4, imagePath: "assets/Pants.svg", name: "Pants", price: 16.9, quantity: 1, sku: "HX421RO"},
-          {id: -5, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -43, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -43321, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -48753, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -43213, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -4543, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -465, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -9, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -8, imagePath: "assets/Shirt.svg", name: "Shirt", price: 16.9, quantity: 40, sku: "HX421RO"},
-          {id: -6, imagePath: "assets/Shoes.svg", name: "Shoes", price: 16.9, quantity: 40, sku: "HX421RO"}],
         
         productsToUpdate: [],
         
@@ -74,14 +47,14 @@
       getAvailableProducts() {
         axios.get('https://localhost:7020/Api/Products/V1/Available')
             .then((response) => {
-              this.availableProducts = response.data
+              useProductsStore().setAvailableProducts(response.data)
             })
       },
       
       getAllProducts() {
         axios.get('https://localhost:7020/Api/Products/V1/')
             .then((response) => {
-              this.products = response.data
+              useProductsStore().setProducts(response.data)
             })
       },
 
@@ -142,13 +115,11 @@
 
           if (index !== -1) {
             this.productsToUpdate[index].quantity--
-            product.quantity--
 
             if (this.productsToUpdate[index].quantity === 0)
               this.productsToUpdate.splice(index, 1)
           } else {
             this.productsToUpdate.push({id: product.id, name: product.name, quantity: -1})
-            product.quantity--
           }
         }
       },
@@ -158,13 +129,11 @@
 
         if (index !== -1) {
           this.productsToUpdate[index].quantity++
-          product.quantity++
 
           if (this.productsToUpdate[index].quantity === 0)
             this.productsToUpdate.splice(index, 1)
         } else {
           this.productsToUpdate.push({id: product.id, name: product.name, quantity: 1})
-          product.quantity++
         }
       },
 
@@ -220,15 +189,15 @@
         this.deliveryProducts[index].quantity++
       },
       
-      addNewProduct(id, sku, name, quantity, price, imagePath) {
+      addNewProduct(id, product) {
         this.deliveryProducts.unshift(
             {
               id: id, 
-              sku: sku, 
-              name: name, 
-              quantity: quantity, 
-              price: price,
-              imagePath: imagePath
+              sku: product.sku, 
+              name: product.name, 
+              quantity: product.quantity, 
+              price: product.price,
+              imagePath: product.imagePath
             })
         
         this.showEditableProduct = false
@@ -237,12 +206,22 @@
       cancelAddingNewProduct() {
         this.showEditableProduct = false
       }
+    },
+    
+    computed: {
+      availableProducts () {
+        return useProductsStore().getAvailableProducts 
+      },
+      
+      products () {
+        return useProductsStore().getProducts
+      }
     }
   }
 </script>
 
 <template>
-  <div class="window" @mousemove="(e) => {mouseX = e.clientX; mouseY = e.clientY}">
+  <div class="window" @mousemove="(e) => {this.mouseX = e.clientX; this.mouseY = e.clientY}">
     <div class="main" :style="{'opacity': opacity, 'filter': 'blur(' + blur + 'px)'}" @click="showSearchProducts=false">
       <div class="gridAndBlocks">
         <div 
@@ -293,12 +272,12 @@
               v-for="product in availableProducts" 
               :key="product.id"
               :name="product.name"
-              :price="product.price"
               :quantity="product.quantity"
+              :price="product.price"
               :image-path="product.imagePath"
+              @remove="removeDeliveryProduct"
               @reduce-quantity="reduceQuantity(product)"
               @increase-quantity="increaseQuantity(product)"
-              :show-delivery-panel="showDeliveryPanel"
           />
         </div>
         <div class="productsSummary">
@@ -349,29 +328,30 @@
             @add-product="addDeliveryProduct"
             @click="showSearchProducts=true"
             @keydown.esc="showSearchProducts=false"
+            style="align-self: center"
         />
         
         <i title="Close" class="bi bi-x-circle exitButton" @click="closeDeliveryPanel"></i>
       </div>
       <div class="deliveryProducts" @click="showSearchProducts=false">
-        <ProductComponent
+        <NewProductComponent
             v-if="showEditableProduct"
-            :is-editable="showEditableProduct"
-            @cancel-adding-product = "cancelAddingNewProduct"
-            @add-new-product="addNewProduct"
+            @cancel="cancelAddingNewProduct"
+            @add="addNewProduct"
         />
         <ProductComponent 
             v-for="product in deliveryProducts"
             :key="product.id"
+            :id="product.id"
             :sku="product.sku"
             :name="product.name"
-            :price="product.price"
             :quantity="product.quantity"
+            :price="product.price"
             :image-path="product.imagePath"
             :is-delivery="true"
-            @reduce-delivery-quantity="reduceDeliveryProductQuantity(product.id)"
-            @increase-delivery-quantity="increaseDeliveryProductQuantity(product.id)"
-            @remove-delivery-product="removeDeliveryProduct(product.id)"
+            @remove="removeDeliveryProduct"
+            @reduce-quantity="reduceDeliveryProductQuantity"
+            @increase-quantity="increaseDeliveryProductQuantity"
         />
       </div>
       <div class="deliveryButtons">
@@ -389,7 +369,7 @@
   </div>
 </template>
 
-<style>
+<style scoped>
   .window {
     display: flex;
     justify-content: center;
@@ -536,6 +516,10 @@
     justify-content: center;
     width: 10%;
     padding: 8px;
+  }
+  
+  .refresh:hover {
+    cursor: pointer
   }
   
   .products {
